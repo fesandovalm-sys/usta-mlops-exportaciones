@@ -1,4 +1,18 @@
 # Memoria de actividad 1
+## Fundamentos, versionamiento y tracking
+
+*Universidad:* Universidad Santo Tomás  
+*Programa:* Maestría en Ciencia de Datos  
+*Asignatura:* MLOps  
+*Docente:* Henry Cala  
+
+*Integrantes:*
+- Fredy Ernesto Sandoval Méndez
+- Liliana Carolina Herrera Prieto
+
+*Repositorio:* https://github.com/fesandovalm-sys/usta-mlops-exportaciones
+
+*Fecha:* 24 de octubre de 2026
 
 ## 1. Objetivo
 
