@@ -218,3 +218,19 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ==========================================
+# MLOps - Archivos locales
+# ==========================================
+
+# MLflow - experimentos y bases locales
+mlruns/
+mlartifacts/
+mlflow.db
+mlflow_store/
+
+# Prefect - almacenamiento local
+.prefect/
+
+# Configuracion local de Poetry
+poetry.toml
