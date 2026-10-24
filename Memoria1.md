@@ -12,7 +12,7 @@ La actividad permitió conocer cómo se relacionan el control de versiones, la g
 
 Inicialmente, consultamos y clonamos el repositorio del docente, con el propósito de disponer de los materiales de referencia y conocer la organización propuesta para las actividades del curso.
 
-Posteriormente, creamos nuestro propio repositorio en GitHub, denominado **`usta-mlops-exportaciones`**, para desarrollar las actividades de manera colaborativa. Configuramos una rama principal (`main`) y ramas individuales (`lili/actividad-1` y `fredy/actividad-1`), lo que nos permitió comprender cómo trabajar sobre un mismo proyecto conservando el historial y los aportes de cada integrante. Escogimos el nombre de `exportaciones` pensando en realizar, en los casos de uso, una aproximación a nuestro trabajo de tesis sobre observabilidad en el procesamiento de los datos de la operación estadística de exportaciones del DANE.
+Posteriormente, creamos nuestro propio repositorio en GitHub, denominado **`usta-mlops-exportaciones`**, (https://github.com/fesandovalm-sys/usta-mlops-exportaciones) para desarrollar las actividades de manera colaborativa. Configuramos una rama principal (`main`) y ramas individuales (`lili/actividad-1` y `fredy/actividad-1`), lo que nos permitió comprender cómo trabajar sobre un mismo proyecto conservando el historial y los aportes de cada integrante. Escogimos el nombre de `exportaciones` pensando en realizar, en los casos de uso, una aproximación a nuestro trabajo de tesis sobre observabilidad en el procesamiento de los datos de la operación estadística de exportaciones del DANE.
 
 En cuanto a la estructura del proyecto, trabajamos con los siguientes componentes:
 
