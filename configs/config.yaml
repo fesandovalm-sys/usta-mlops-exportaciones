@@ -1,0 +1,37 @@
+
+# Actividad 2 - Clasificacion del destino de exportaciones
+
+datos:
+  entrenamiento: data/processed/train_202508_202605.csv.gz
+  validacion: data/processed/valid_202606_202608.csv.gz
+  inferencia: data/processed/sept_202609.csv.gz
+  objetivo: destino_usa
+
+modelos:
+  - nombre: logreg_c1
+    tipo: logistic_regression
+    parametros:
+      C: 1.0
+      max_iter: 1000
+      random_state: 42
+
+  - nombre: logreg_c01
+    tipo: logistic_regression
+    parametros:
+      C: 0.1
+      max_iter: 1000
+      random_state: 42
+
+mlflow:
+  tracking_uri: http://127.0.0.1:5000
+  experimento: expo-destino-usa
+
+registro:
+  nombre_modelo: expo-destino-usa
+  umbral_auc: 0.70
+  alias: champion
+
+inferencia:
+  tamano_lote: 100
+  carpeta_salida: data/outputs
+  umbral_clasificacion: 0.50
