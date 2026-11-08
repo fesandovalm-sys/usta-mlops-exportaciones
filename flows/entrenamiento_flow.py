@@ -136,7 +136,10 @@ def registrar_experimento(modelo, candidato, config, features, metricas, valid, 
             input_example=ejemplo,
             signature=infer_signature(ejemplo, modelo.predict(ejemplo)),
             serialization_format="skops",
-            skops_trusted_types=["numpy.dtype"],
+            skops_trusted_types=[
+                "numpy.dtype",
+                "sklearn.tree._tree.Tree",
+            ],
         )
 
         run_id = run.info.run_id
