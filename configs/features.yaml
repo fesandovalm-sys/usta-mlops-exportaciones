@@ -1,0 +1,19 @@
+
+# Seleccion de variables para el experimento
+
+seleccion: ALL
+
+numericas:
+  - pnk
+  - fobdol
+
+categoricas:
+  - capitulo
+  - modad
+  - dpto_origen
+
+custom:
+  - capitulo
+  - modad
+  - pnk
+  - fobdol

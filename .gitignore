@@ -234,3 +234,8 @@ mlflow_store/
 
 # Configuracion local de Poetry
 poetry.toml
+
+# Actividad 2 - Microdatos y resultados locales
+/data/raw/
+/data/processed/
+/data/outputs/
