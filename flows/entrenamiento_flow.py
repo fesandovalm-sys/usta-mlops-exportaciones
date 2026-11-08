@@ -129,12 +129,16 @@ def registrar_experimento(modelo, candidato, config, features, metricas, valid, 
         })
         mlflow.log_metrics(metricas)
         ejemplo = valid[variables].head(3)
+        
         info = mlflow.sklearn.log_model(
             sk_model=modelo,
             name="model",
             input_example=ejemplo,
             signature=infer_signature(ejemplo, modelo.predict(ejemplo)),
+            serialization_format="skops",
+            skops_trusted_types=["numpy.dtype"],
         )
+
         run_id = run.info.run_id
     return {"run_id": run_id, "model_uri": info.model_uri,
             "auc": metricas["auc"], "candidato": candidato["nombre"]}
