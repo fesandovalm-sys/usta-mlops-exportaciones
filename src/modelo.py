@@ -8,6 +8,7 @@ import numpy as np
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
@@ -67,7 +68,7 @@ def resolver_variables(config_features):
 def construir_modelo(tipo, parametros, numericas, categoricas):
     """Construye preprocesamiento y clasificador."""
 
-    if tipo != "logistic_regression":
+    if tipo not in ("logistic_regression", "random_forest"):
         raise ValueError(f"Modelo no soportado: {tipo}")
 
     transformadores = []
@@ -97,7 +98,10 @@ def construir_modelo(tipo, parametros, numericas, categoricas):
         transformers=transformadores
     )
 
-    clasificador = LogisticRegression(**parametros)
+    if tipo == "logistic_regression":
+        clasificador = LogisticRegression(**parametros)
+    else:
+        clasificador = RandomForestClassifier(**parametros)
 
     return Pipeline([
         ("preprocesamiento", preprocesador),
