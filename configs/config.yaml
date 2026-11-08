@@ -35,3 +35,6 @@ inferencia:
   tamano_lote: 100
   carpeta_salida: data/outputs
   umbral_clasificacion: 0.50
+despliegues:
+  inferencia_cron: "0 21 * * *"
+  zona_horaria: "America/Bogota"
