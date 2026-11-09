@@ -123,4 +123,4 @@ La preparación de datos, la construcción de `destino_usa`, la separación temp
 
 El desarrollo del clasificador, sus configuraciones, los flujos de Prefect, el registro en MLflow y la API de FastAPI corresponden a la contribución de Fredy Sandoval.
 
-La implementación de ingesta y sus pruebas contaron con asistencia de ChatGPT para estructuración de código y verificaciones; las ejecuciones y resultados consignados se comprobaron en el entorno local del proyecto. La documentación diferencia esta asistencia del trabajo realizado y validado por los integrantes.
+La implementación de ingesta y sus pruebas contaron con asistencia de herramientas de inteligencia artificial para estructuración de código y verificaciones; las ejecuciones y resultados consignados se comprobaron en el entorno local del proyecto. La documentación diferencia esta asistencia del trabajo realizado y validado por los integrantes.
