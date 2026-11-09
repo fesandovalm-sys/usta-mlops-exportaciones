@@ -239,3 +239,5 @@ poetry.toml
 /data/raw/
 /data/processed/
 /data/outputs/
+# Configuración local de VS Code
+.vscode/
