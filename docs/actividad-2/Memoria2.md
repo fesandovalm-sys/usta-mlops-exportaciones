@@ -38,15 +38,81 @@ Finalmente, se desarrolló una API con FastAPI en `api/main.py`, que expone los 
 
 Las evidencias de ejecución y validación del sistema se encuentran organizadas en el directorio [`docs/actividad-2/evidencias/`](evidencias/). Estas capturas documentan las diferentes etapas de implementación y permiten verificar el funcionamiento de los componentes desarrollados, desde la orquestación de los flujos hasta la actualización del modelo y su utilización en los servicios de inferencia.
 
-| Evidencia | Descripción y comprobación |
-|---|---|
-| [Despliegues de Prefect](evidencias/02_despliegues_prefect.png) y [ejecución automática](evidencias/11_prefect_inferencia_programada.png)<br><img src="evidencias/02_despliegues_prefect.png" width="300"><br><img src="evidencias/11_prefect_inferencia_programada.png" width="300"> | Se verifica la configuración de dos despliegues independientes para entrenamiento e inferencia, así como la ejecución automática del flujo diario mediante la programación establecida. La ejecución programada finalizó satisfactoriamente con estado `Completed`. |
-| [Champion v1](evidencias/06_mlflow_champion_v1.png) y [champion v2](evidencias/15_mlflow_champion_v2.png)<br><img src="evidencias/06_mlflow_champion_v1.png" width="300"><br><img src="evidencias/15_mlflow_champion_v2.png" width="300"> | Se evidencia el registro y versionamiento de los modelos en MLflow, junto con la actualización del alias `champion` desde la regresión logística inicial hacia Random Forest, después de superar el AUC del modelo vigente. |
-| [Entrenamiento actualizado](evidencias/14_prefect_entrenamiento_random_forest.png)<br><img src="evidencias/14_prefect_entrenamiento_random_forest.png" width="300"> | Se documenta la ejecución satisfactoria de la pipeline de entrenamiento desde Prefect, incorporando el nuevo candidato Random Forest y conservando las etapas de carga, entrenamiento, evaluación y registro de resultados. |
-| [FastAPI: predicción v2](evidencias/17_fastapi_predict_champion_v2.png) y [verificación del servicio](evidencias/16_fastapi_health_champion_v2.png)<br><img src="evidencias/17_fastapi_predict_champion_v2.png" width="300"><br><img src="evidencias/16_fastapi_health_champion_v2.png" width="300"> | Se comprueba que la API responde correctamente a las solicitudes de consulta y predicción utilizando el modelo `champion` versión 2. La actualización se consiguió mediante el reinicio del servicio, sin modificar el código de la API. |
-| [Inferencia con champion v2](evidencias/18_prefect_inferencia_champion_v2.png), [registros de ejecución](evidencias/19_prefect_logs_inferencia_v2.png) y [seguimiento en MLflow](evidencias/20_mlflow_inferencia_champion_v2.png)<br><img src="evidencias/18_prefect_inferencia_champion_v2.png" width="300"><br><img src="evidencias/19_prefect_logs_inferencia_v2.png" width="300"><br><img src="evidencias/20_mlflow_inferencia_champion_v2.png" width="300"> | Se verifica que la pipeline de inferencia recupera el modelo mediante su alias, utiliza la versión vigente y genera un nuevo lote de 100 predicciones. La ejecución queda registrada tanto en Prefect como en MLflow, permitiendo identificar la versión aplicada y los resultados generados. |
-| [Fuentes y preparación de datos](fuentes_y_datos.md) | Se documentan la procedencia de los microdatos, las variables seleccionadas, las reglas de transformación y validación, la conformación de los conjuntos temporales y los resultados de los controles de calidad aplicados durante la ingesta. |
-| [PR #10](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/10), [PR #11](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/11) y [PR #12](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/12) | Se presenta la trazabilidad del desarrollo colaborativo mediante GitHub, incluyendo la implementación de las pipelines y la API, la incorporación de Random Forest y la integración de las evidencias finales. Los Pull Requests permiten identificar los cambios realizados y su incorporación a la rama principal del repositorio. |
+
+### Despliegues de Prefect e inferencia automática
+
+[Despliegues de Prefect](evidencias/02_despliegues_prefect.png) y [ejecución automática](evidencias/11_prefect_inferencia_programada.png).
+
+<img src="evidencias/02_despliegues_prefect.png" width="440">
+
+<img src="evidencias/11_prefect_inferencia_programada.png" width="440">
+
+**Descripción y comprobación.** Se verifica la configuración de dos despliegues independientes para entrenamiento e inferencia, así como la ejecución automática del flujo diario mediante la programación establecida. La ejecución programada finalizó satisfactoriamente con estado `Completed`.
+
+---
+
+### Registro y promoción del modelo champion
+
+[Champion v1](evidencias/06_mlflow_champion_v1.png) y [champion v2](evidencias/15_mlflow_champion_v2.png).
+
+<img src="evidencias/06_mlflow_champion_v1.png" width="440">
+
+<img src="evidencias/15_mlflow_champion_v2.png" width="440">
+
+**Descripción y comprobación.** Se evidencia el registro y versionamiento de los modelos en MLflow, junto con la actualización del alias `champion` desde la regresión logística inicial hacia Random Forest, después de superar el AUC del modelo vigente.
+
+---
+
+### Entrenamiento actualizado con Random Forest
+
+[Entrenamiento actualizado](evidencias/14_prefect_entrenamiento_random_forest.png).
+
+<img src="evidencias/14_prefect_entrenamiento_random_forest.png" width="440">
+
+**Descripción y comprobación.** Se documenta la ejecución satisfactoria de la pipeline de entrenamiento desde Prefect, incorporando el nuevo candidato Random Forest y conservando las etapas de carga, entrenamiento, evaluación y registro de resultados.
+
+---
+
+### Validación de FastAPI con champion v2
+
+[FastAPI: predicción v2](evidencias/17_fastapi_predict_champion_v2.png) y [verificación del servicio](evidencias/16_fastapi_health_champion_v2.png).
+
+<img src="evidencias/17_fastapi_predict_champion_v2.png" width="440">
+
+<img src="evidencias/16_fastapi_health_champion_v2.png" width="440">
+
+**Descripción y comprobación.** Se comprueba que la API responde correctamente a las solicitudes de consulta y predicción utilizando el modelo `champion` versión 2. La actualización se consiguió mediante el reinicio del servicio, sin modificar el código de la API.
+
+---
+
+### Inferencia con champion v2 y seguimiento en MLflow
+
+[Inferencia con champion v2](evidencias/18_prefect_inferencia_champion_v2.png), [registros de ejecución](evidencias/19_prefect_logs_inferencia_v2.png) y [seguimiento en MLflow](evidencias/20_mlflow_inferencia_champion_v2.png).
+
+<img src="evidencias/18_prefect_inferencia_champion_v2.png" width="440">
+
+<img src="evidencias/19_prefect_logs_inferencia_v2.png" width="440">
+
+<img src="evidencias/20_mlflow_inferencia_champion_v2.png" width="440">
+
+**Descripción y comprobación.** Se verifica que la pipeline de inferencia recupera el modelo mediante su alias, utiliza la versión vigente y genera un nuevo lote de 100 predicciones. La ejecución queda registrada tanto en Prefect como en MLflow, permitiendo identificar la versión aplicada y los resultados generados.
+
+---
+
+### Fuentes y preparación de datos
+
+[Consultar fuentes y preparación de datos](fuentes_y_datos.md).
+
+**Descripción y comprobación.** Se documentan la procedencia de los microdatos, las variables seleccionadas, las reglas de transformación y validación, la conformación de los conjuntos temporales y los resultados de los controles de calidad aplicados durante la ingesta.
+
+---
+
+### Trazabilidad del desarrollo colaborativo
+
+[PR #10](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/10), [PR #11](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/11) y [PR #12](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/12).
+
+**Descripción y comprobación.** Se presenta la trazabilidad del desarrollo colaborativo mediante GitHub, incluyendo la implementación de las pipelines y la API, la incorporación de Random Forest y la integración de las evidencias finales. Los Pull Requests permiten identificar los cambios realizados y su incorporación a la rama principal del repositorio.
+
 
 En conjunto, estas evidencias permiten comprobar el cumplimiento de los requisitos funcionales de la Actividad 2 y, particularmente, la aplicación efectiva de la política de promoción de modelos. La transición del alias `champion` de la versión 1 a la versión 2, seguida de su utilización por FastAPI y por la pipeline de inferencia, demuestra la integración entre Prefect, MLflow y los componentes de servicio desarrollados.
 
@@ -107,8 +173,8 @@ En conclusión, el principal resultado del ejercicio fue la construcción y vali
 
 Para el desarrollo de la presente actividad se emplearon herramientas de inteligencia artificial como apoyo técnico y académico en la estructuración y revisión de código, la formulación de pruebas automatizadas, la elaboración de comandos de ejecución, el diagnóstico de errores y la organización de la documentación. Estas herramientas facilitaron la exploración de alternativas de implementación y la identificación de posibles soluciones a problemas técnicos, sin sustituir el análisis, la validación ni la toma de decisiones de los autores.
 
-**Lilianca Carolina Herrera Prieto** participó en el desarrollo y verificación del proceso de ingesta de microdatos, la implementación de pruebas automatizadas y la incorporación y evaluación del algoritmo Random Forest. Por su parte, **Fredy Ernesto Sandoval Méndez** desarrolló e integró los flujos de entrenamiento e inferencia, la configuración de despliegues en Prefect, el seguimiento y versionamiento de modelos mediante MLflow y el servicio de predicción implementado con FastAPI. Asimismo, realizó las verificaciones funcionales relacionadas con la promoción de modelos, la ejecución programada de inferencias y las respuestas del servicio.
+**Liliana Carolina Herrera Prieto** participó en el desarrollo y verificación del proceso de ingesta de microdatos, la implementación de pruebas automatizadas y la incorporación y evaluación del algoritmo Random Forest. Por su parte, **Fredy Ernesto Sandoval Méndez** desarrolló e integró los flujos de entrenamiento e inferencia, la configuración de despliegues en Prefect, el seguimiento y versionamiento de modelos mediante MLflow y el servicio de predicción implementado con FastAPI. Asimismo, realizó las verificaciones funcionales relacionadas con la promoción de modelos, la ejecución programada de inferencias y las respuestas del servicio.
 
 Ambos autores participaron en la revisión de los resultados, la interpretación de las métricas y la verificación de las evidencias obtenidas. Las propuestas generadas mediante inteligencia artificial fueron contrastadas con el código implementado, la documentación técnica y las características de los datos utilizados. Aquellas que no correspondían con el funcionamiento real del sistema, las restricciones metodológicas o las reglas de promoción definidas fueron ajustadas o descartadas.
 
-En consecuencia, las herramientas de inteligencia artificial se utilizaron exclusivamente como recursos de asistencia técnica y académica. La formulación del problema, las decisiones metodológicas, la implementación y validación de la solución, el análisis crítico de los resultados y las conclusiones corresponden a **Lilianca Carolina Herrera Prieto y Fredy Ernesto Sandoval Méndez**, quienes asumen la responsabilidad académica por la originalidad, el contenido y los resultados de esta entrega.
+En consecuencia, las herramientas de inteligencia artificial se utilizaron exclusivamente como recursos de asistencia técnica y académica. La formulación del problema, las decisiones metodológicas, la implementación y validación de la solución, el análisis crítico de los resultados y las conclusiones corresponden a **Liliana Carolina Herrera Prieto y Fredy Ernesto Sandoval Méndez**, quienes asumen la responsabilidad académica por la originalidad, el contenido y los resultados de esta entrega.
