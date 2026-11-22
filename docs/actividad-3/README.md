@@ -1,65 +1,104 @@
 # Actividad 3 — Monitoreo, drift y CI
 
-**Asignatura:** MLOps · Maestría en Ciencia de Datos, Universidad Santo Tomás  
-**Integrantes:** Liliana Carolina Herrera Prieto y Fredy Ernesto Sandoval Méndez  
-**Repositorio:** [usta-mlops-exportaciones](https://github.com/fesandovalm-sys/usta-mlops-exportaciones)  
-**Guía:** [Actividad 3 — Henry Cala](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/actividad-3.md)  
-**Estado:** documentación preliminar; resultados de integración y monitoreo pendientes de incorporar.
+**Asignatura:** MLOps · Maestría en Ciencia de Datos, Universidad Santo Tomás
 
-## Objetivo y continuidad del proyecto
+**Integrantes:** Liliana Carolina Herrera Prieto y Fredy Ernesto Sandoval Méndez
 
-Extender el sistema de clasificación desarrollado en la Actividad 2 con simulación controlada de cambios en los datos, detección de *feature drift* y *target drift*, alertas y pruebas automatizadas. Se mantiene el caso de estudio basado en microdatos de exportaciones colombianas EXPO del DANE/ANDA: estimar si una operación tiene como destino Estados Unidos (`destino_usa = 1`) u otro destino válido (`destino_usa = 0`). El modelo registrado en MLflow utiliza el alias `champion`.
+**Caso de estudio:** clasificación del destino de exportaciones colombianas (EXPO, DANE/ANDA)
 
-## Componentes del proyecto
+**Documentación:** [Memoria 3](Memoria3.md) · [Guía oficial de la Actividad 3](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/actividad-3.md)
 
-| Componente | Archivo o ubicación | Estado documentado |
+## 1. Objetivo y alcance
+
+Se amplía el sistema de clasificación de la [Actividad 2](../actividad-2/README.md) con simulación reproducible de *data drift*, monitoreo de características (*feature drift*), monitoreo de la variable objetivo (*target drift*) y alertas configurables. El caso de estudio utiliza microdatos EXPO del DANE/ANDA para clasificar si una operación de exportación tiene como destino Estados Unidos (`destino_usa = 1`) u otro país válido (`destino_usa = 0`). En las ejecuciones documentadas se utilizó el modelo Random Forest registrado en MLflow con el alias `champion`, versión 2.
+
+Las cinco variables predictoras son `pnk`, `fobdol`, `capitulo`, `modad` y `dpto_origen`. El período y la variable objetivo no se utilizan como predictores.
+
+## 2. Componentes implementados
+
+| Componente | Ubicación | Función |
 |---|---|---|
-| Simulación, validación y métricas de drift | [`src/monitoreo.py`](../../src/monitoreo.py) | Implementado y probado |
-| Pruebas de monitoreo | [`tests/test_monitoreo.py`](../../tests/test_monitoreo.py) | Implementadas y ejecutadas |
-| Pruebas de contrato de datos | [`tests/test_datos.py`](../../tests/test_datos.py) | Implementadas y ejecutadas |
-| Modelo y variables | [`src/modelo.py`](../../src/modelo.py) | Proveniente de la Actividad 2 |
-| Entrenamiento y registro | [`flows/entrenamiento_flow.py`](../../flows/entrenamiento_flow.py) | Proveniente de la Actividad 2 |
-| Inferencia con drift emulado y conservación del lote | [`flows/inferencia_flow.py`](../../flows/inferencia_flow.py) | Integración y evidencia final pendientes |
-| Flujos de detección con Prefect/Evidently | `flows/` | Pendiente de verificar archivos definitivos y ejecuciones |
-| API FastAPI | [`api/main.py`](../../api/main.py) | Proveniente de la Actividad 2 |
-| Parámetros de monitoreo | [`configs/config.yaml`](../../configs/config.yaml) | Configuración existente; validación integral pendiente |
-| Memoria de actividad | [`Memoria3.md`](Memoria3.md) | Borrador en elaboración |
+| Simulación y validaciones estadísticas | [`src/monitoreo.py`](../../src/monitoreo.py) | Simulación reproducible, validación de lotes, chi-cuadrado y extracción de la fracción de drift de Evidently |
+| Inferencia | [`flows/inferencia_flow.py`](../../flows/inferencia_flow.py) | Selección de lote, perturbación controlada, predicciones con `champion`, conservación de lotes y registro en MLflow |
+| Monitoreo de características | [`flows/drift_features_flow.py`](../../flows/drift_features_flow.py) | Comparación de cinco variables con Evidently y reporte HTML/JSON |
+| Monitoreo del objetivo | [`flows/drift_evento_flow.py`](../../flows/drift_evento_flow.py) | Comparación de proporciones con chi-cuadrado y resumen JSON |
+| Parámetros | [`configs/config.yaml`](../../configs/config.yaml) | Niveles de simulación, tamaños de lote y referencia, umbrales y rutas |
+| Pruebas de monitoreo | [`tests/test_monitoreo.py`](../../tests/test_monitoreo.py) | Pruebas de funciones de drift con datos sintéticos |
+| Pruebas de datos | [`tests/test_datos.py`](../../tests/test_datos.py) | Esquema, tipos, rangos, nulos y etiquetas |
+| Evidencias | [`evidencias/`](evidencias/) | Nueve capturas de inferencia y monitoreo |
 
-## Simulación controlada de drift
+Se conservan el entrenamiento, la API FastAPI y los servicios de Prefect y MLflow de la Actividad 2.
 
-La función `aplicar_drift(lote, nivel, semilla=42)` admite niveles entre 0 y 1; para la actividad se consideran `0.0`, `0.3` y `0.6`. Desplaza las variables numéricas `pnk` y `fobdol` mediante `2 × nivel × escala`, donde la escala se obtiene de la desviación estándar del lote (o de una escala alternativa si la variable es constante). Impide valores negativos y conserva el lote de entrada sin modificar.
+## 3. Simulación y criterios de monitoreo
 
-La variable objetivo se modifica **solo con fines de simulación**: se convierten aleatoriamente algunas etiquetas `0` en `1` hasta aumentar su tasa en un máximo de `0.30 × nivel` puntos de proporción, sujeto al límite de 1. La columna `destino_usa_original` preserva las etiquetas observadas anteriores al cambio. La semilla permite reproducir la selección. **La tasa simulada no representa un cambio real en las exportaciones.**
+La función `aplicar_drift` recibe un nivel entre `0.0` y `1.0`. Se evaluaron los escenarios `0.0`, `0.3` y `0.6`, con semilla `42`. La perturbación desplaza las distribuciones de `pnk` y `fobdol` de forma proporcional al nivel, sin generar valores negativos; asimismo, incrementa de manera controlada la proporción simulada de `destino_usa = 1`. Se conserva `destino_usa_original`, lo que permite distinguir las etiquetas observadas de las utilizadas en la simulación. **Las modificaciones inducidas no representan cambios reales en las exportaciones.** El AUC temporal se evalúa frente a las etiquetas originales.
 
-`validar_lote` rechaza lotes vacíos, sin objetivo, con nulos o etiquetas distintas de 0 y 1. `drift_de_target` contrasta las proporciones binarias mediante chi-cuadrado y devuelve tasas, valor p y decisión de drift. `fraccion_desde_evidently` extrae la proporción de variables con drift a partir de la métrica `DriftedColumnsCount`.
+Ambos flujos de monitoreo utilizan una muestra reproducible de **10.000 registros de entrenamiento** como referencia y lotes de **500 registros de septiembre de 2026**:
 
-## Monitoreo y alertas — pendiente de validación integral
+- **Características:** Evidently (`DataDriftPreset`) compara las cinco variables. El umbral configurable es `monitoreo.umbral_drift: 0.30`, aplicado al reporte con `DataDriftPreset(drift_share=umbral)`. Se genera alerta cuando la fracción de características con drift supera el 30 %: con cinco variables, esto equivale a detectar drift en al menos dos.
+- **Objetivo:** una prueba de chi-cuadrado contrasta la distribución binaria de `destino_usa` en el lote simulado frente a la referencia. Con `monitoreo.alfa_evento: 0.05`, se genera alerta cuando `p < 0.05`. El lote debe contener etiquetas; su ausencia produce un error de validación.
 
-La solución prevista compara cada lote de inferencia con una referencia de entrenamiento, con dos flujos de Prefect: uno para distribuciones de variables mediante Evidently y otro para la proporción de `destino_usa`, que requiere etiquetas. La configuración contempla `umbral_drift: 0.30` y `alfa_evento: 0.05`. **Pendiente:** verificar los flujos definitivos, el origen del conjunto de referencia, la persistencia de reportes por lote y las alertas efectivamente emitidas.
+Los flujos guardan los resultados en `data/outputs/reportes_drift/`: reporte HTML y resumen JSON para características; resumen JSON para el objetivo. La inferencia guarda los lotes por nivel y fecha en `data/outputs/lotes/` y actualiza `lote_actual.csv`, utilizado por los flujos de monitoreo.
 
-**Pendiente de evidencia:** ejecuciones y archivos diferenciados de niveles `0.0`, `0.3` y `0.6`; reportes comparativos de `0.0` y `0.6`; comprobación de alerta solo por encima del umbral; registro de ejecuciones en Prefect/MLflow. No se atribuyen resultados a esas ejecuciones hasta contar con sus evidencias.
+## 4. Reproducción de las ejecuciones
 
-## Pruebas verificadas
+Desde la raíz del repositorio, con los datos procesados y el modelo `champion` disponible en MLflow (véase [Actividad 2](../actividad-2/README.md)):
 
-Desde la raíz del repositorio, con el entorno Poetry instalado:
+```powershell
+poetry install --with dev
+docker compose -f .\services\docker-compose.yml up -d
+$env:PREFECT_API_URL = "http://127.0.0.1:4200/api"
+$env:MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
+$env:PYTHONUTF8 = "1"
+```
 
-    poetry install --with dev
-    poetry run python -m pytest -q
+Seleccionar en `configs/config.yaml` el valor `inferencia.nivel_drift` (`0.0`, `0.3` o `0.6`). Ejecutar, en este orden:
 
-**Resultado local confirmado:** `44 passed in 2.67s`, después de sincronizar la rama con `main` e instalar dependencias. Las pruebas de monitoreo y contrato de datos utilizan datos sintéticos y no requieren los servicios MLflow/Prefect ni los microdatos originales. Este resultado **no demuestra por sí solo** la ejecución de los flujos integrados ni el cumplimiento de las pruebas de API, modelo e inferencia exigidas por la guía; su cobertura y evidencias quedan por verificar.
+```powershell
+poetry run python -m flows.inferencia_flow
+poetry run python -m flows.drift_features_flow
+poetry run python -m flows.drift_evento_flow
+```
 
-**Trazabilidad:** [PR #16](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/16) integrado en `main` (merge `53da2e2`), correspondiente a `src/monitoreo.py` y las dos suites de pruebas.
+Repetir la secuencia para cada escenario. Es necesario ejecutar los flujos de monitoreo antes de iniciar la siguiente inferencia, ya que esta reemplaza `data/outputs/lotes/lote_actual.csv`. Los archivos de datos, modelos y resultados locales no se versionan; las capturas de las ejecuciones sí se incluyen en el repositorio.
 
-## Pendientes para cerrar la actividad
+## 5. Resultados experimentales
 
-- Confirmar los nombres y el comportamiento final de los dos flujos de drift, incluidos reportes y alertas.
-- Incorporar resultados reales de los tres niveles y evidencias que permitan contrastar `0.0` frente a `0.6`.
-- Comprobar que los lotes usados cumplen el criterio de procedencia de la partición de prueba establecido en la guía.
-- Verificar cobertura de pruebas de modelo, inferencia y API, y CI únicamente si se implementa.
-- Completar la [Memoria 3](Memoria3.md) y generar el PDF solo tras la validación final.
+La tasa `destino_usa = 1` de referencia fue **12,90 %** en los tres escenarios. Se obtuvieron los siguientes resultados:
+
+| Nivel simulado | AUC temporal | Características con drift | Tasa USA del lote | Alerta características | Alerta objetivo | Valor p del objetivo |
+|---|---:|---:|---:|---|---|---:|
+| `0.0` | 0,7464 | 20 % (1/5) | 13,40 % | No | No | 0,797220 |
+| `0.3` | 0,7029 | 40 % (2/5) | 22,40 % | Sí | Sí | < 0,000001 |
+| `0.6` | 0,6752 | 60 % (3/5) | 31,40 % | Sí | Sí | < 0,000001 |
+
+En `0.0` no hubo perturbación artificial: se conservaron las 67 etiquetas positivas y no se modificó ninguna. Sin embargo, Evidently detectó drift en una variable (20 %), sin activar la alerta global del 30 %. En `0.3` y `0.6`, aumentaron las diferencias detectadas y se activaron ambas alertas. La reducción del AUC corresponde a estos **escenarios de simulación**, no a una medición de desempeño en producción ni, por sí sola, a una demostración causal.
+
+## 6. Evidencias de ejecución
+
+| Escenario | Inferencia Prefect | Drift de características | Drift del objetivo |
+|---|---|---|---|
+| `0.0` | [01 — Inferencia](evidencias/01_prefect_inferencia_drift_0.png) | [02 — Evidently](evidencias/02_evidently_features_drift_0.png) | [03 — Chi-cuadrado](evidencias/03_prefect_target_drift_0.png) |
+| `0.3` | [04 — Inferencia](evidencias/04_prefect_inferencia_drift_03.png) | [05 — Evidently](evidencias/05_evidently_features_drift_03.png) | [06 — Chi-cuadrado](evidencias/06_prefect_target_drift_03.png) |
+| `0.6` | [07 — Inferencia](evidencias/07_prefect_inferencia_drift_06.png) | [08 — Evidently](evidencias/08_evidently_features_drift_06.png) | [09 — Chi-cuadrado](evidencias/09_prefect_target_drift_06.png) |
+
+Las nueve ejecuciones definitivas finalizaron en estado `Completed`. El umbral de Evidently se alineó con la configuración de 30 % y se regeneraron los reportes antes de su consolidación.
+
+## 7. Pruebas, alcance y trazabilidad
+
+```powershell
+poetry run python -m pytest -q
+```
+
+La suite automatizada existente registró **44 pruebas satisfactorias**. Comprende pruebas de ingesta y validación de datos, así como lógica de simulación y detección de drift; sus pruebas sintéticas permiten verificar funciones sin levantar Prefect ni MLflow. La ejecución funcional del entrenamiento, la inferencia y FastAPI no equivale a cobertura automatizada específica de esos componentes. No se implementó un workflow de GitHub Actions; la CI es opcional en la guía.
+
+- [PR #16](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/16): simulación, validaciones y pruebas.
+- [PR #17](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/17): flujos de inferencia y monitoreo, configuración y evidencias.
+- [PR #18](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/18): aplicación del umbral configurado al reporte de Evidently.
 
 ## Referencias
 
-- [Guía oficial de Actividad 3](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/actividad-3.md)
-- [Plantilla de memoria](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/plantilla-memoria.md)
-- [Documentación de la Actividad 2](../actividad-2/README.md)
+- [Memoria 3](Memoria3.md).
+- [Actividad 2: documentación](../actividad-2/README.md).
+- [Guía oficial de la Actividad 3](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/actividad-3.md).
+- [Plantilla de memoria](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/plantilla-memoria.md).
