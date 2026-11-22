@@ -26,13 +26,13 @@ El umbral de características se fijó en **30 %** como regla operativa configur
 
 ## 4. Evidencias
 
-El módulo de monitoreo y sus pruebas se integraron en el [PR #16](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/16); los flujos y nueve capturas, en el [PR #17](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/17); y la corrección del umbral del reporte, en el [PR #18](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/18). La suite registró **44 pruebas automatizadas satisfactorias**.
+El módulo de monitoreo y sus pruebas se integraron en el [PR #16](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/16); los flujos y nueve capturas iniciales, en el [PR #17](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/17); y la corrección del umbral junto con tres capturas adicionales de los reportes HTML de Evidently, en el [PR #18](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/18). La suite registró **44 pruebas automatizadas satisfactorias**.
 
-| Nivel | Inferencia (Prefect) | Características (Evidently) | Objetivo (Prefect) |
-|---|---|---|---|
-| `0.0` | [Evidencia 01](evidencias/01_prefect_inferencia_drift_0.png) | [Evidencia 02](evidencias/02_evidently_features_drift_0.png) | [Evidencia 03](evidencias/03_prefect_target_drift_0.png) |
-| `0.3` | [Evidencia 04](evidencias/04_prefect_inferencia_drift_03.png) | [Evidencia 05](evidencias/05_evidently_features_drift_03.png) | [Evidencia 06](evidencias/06_prefect_target_drift_03.png) |
-| `0.6` | [Evidencia 07](evidencias/07_prefect_inferencia_drift_06.png) | [Evidencia 08](evidencias/08_evidently_features_drift_06.png) | [Evidencia 09](evidencias/09_prefect_target_drift_06.png) |
+| Nivel | Inferencia (Prefect) | Características (Evidently) | Objetivo (Prefect) | Reporte HTML (Evidently) |
+|---|---|---|---|---|
+| `0.0` | [Evidencia 01](evidencias/01_prefect_inferencia_drift_0.png) | [Evidencia 02](evidencias/02_evidently_features_drift_0.png) | [Evidencia 03](evidencias/03_prefect_target_drift_0.png) | [Evidencia 10](evidencias/10_evidently_reporte_html_drift_0.png) |
+| `0.3` | [Evidencia 04](evidencias/04_prefect_inferencia_drift_03.png) | [Evidencia 05](evidencias/05_evidently_features_drift_03.png) | [Evidencia 06](evidencias/06_prefect_target_drift_03.png) | [Evidencia 11](evidencias/11_evidently_reporte_html_drift_03.png) |
+| `0.6` | [Evidencia 07](evidencias/07_prefect_inferencia_drift_06.png) | [Evidencia 08](evidencias/08_evidently_features_drift_06.png) | [Evidencia 09](evidencias/09_prefect_target_drift_06.png) | [Evidencia 12](evidencias/12_evidently_reporte_html_drift_06.png) |
 
 ## 5. Resultados
 

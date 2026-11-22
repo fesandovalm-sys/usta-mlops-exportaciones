@@ -25,7 +25,7 @@ Las cinco variables predictoras son `pnk`, `fobdol`, `capitulo`, `modad` y `dpto
 | Parámetros | [`configs/config.yaml`](../../configs/config.yaml) | Niveles de simulación, tamaños de lote y referencia, umbrales y rutas |
 | Pruebas de monitoreo | [`tests/test_monitoreo.py`](../../tests/test_monitoreo.py) | Pruebas de funciones de drift con datos sintéticos |
 | Pruebas de datos | [`tests/test_datos.py`](../../tests/test_datos.py) | Esquema, tipos, rangos, nulos y etiquetas |
-| Evidencias | [`evidencias/`](evidencias/) | Nueve capturas de inferencia y monitoreo |
+| Evidencias | [`evidencias/`](evidencias/) | Doce capturas de inferencia, monitoreo y reportes HTML de Evidently |
 
 Se conservan el entrenamiento, la API FastAPI y los servicios de Prefect y MLflow de la Actividad 2.
 
@@ -76,13 +76,13 @@ En `0.0` no hubo perturbación artificial: se conservaron las 67 etiquetas posit
 
 ## 6. Evidencias de ejecución
 
-| Escenario | Inferencia Prefect | Drift de características | Drift del objetivo |
-|---|---|---|---|
-| `0.0` | [01 — Inferencia](evidencias/01_prefect_inferencia_drift_0.png) | [02 — Evidently](evidencias/02_evidently_features_drift_0.png) | [03 — Chi-cuadrado](evidencias/03_prefect_target_drift_0.png) |
-| `0.3` | [04 — Inferencia](evidencias/04_prefect_inferencia_drift_03.png) | [05 — Evidently](evidencias/05_evidently_features_drift_03.png) | [06 — Chi-cuadrado](evidencias/06_prefect_target_drift_03.png) |
-| `0.6` | [07 — Inferencia](evidencias/07_prefect_inferencia_drift_06.png) | [08 — Evidently](evidencias/08_evidently_features_drift_06.png) | [09 — Chi-cuadrado](evidencias/09_prefect_target_drift_06.png) |
+| Escenario | Inferencia Prefect | Drift de características | Drift del objetivo | Reporte HTML de Evidently |
+|---|---|---|---|---|
+| `0.0` | [01 — Inferencia](evidencias/01_prefect_inferencia_drift_0.png) | [02 — Evidently](evidencias/02_evidently_features_drift_0.png) | [03 — Chi-cuadrado](evidencias/03_prefect_target_drift_0.png) | [10 — Reporte HTML](evidencias/10_evidently_reporte_html_drift_0.png) |
+| `0.3` | [04 — Inferencia](evidencias/04_prefect_inferencia_drift_03.png) | [05 — Evidently](evidencias/05_evidently_features_drift_03.png) | [06 — Chi-cuadrado](evidencias/06_prefect_target_drift_03.png) | [11 — Reporte HTML](evidencias/11_evidently_reporte_html_drift_03.png) |
+| `0.6` | [07 — Inferencia](evidencias/07_prefect_inferencia_drift_06.png) | [08 — Evidently](evidencias/08_evidently_features_drift_06.png) | [09 — Chi-cuadrado](evidencias/09_prefect_target_drift_06.png) | [12 — Reporte HTML](evidencias/12_evidently_reporte_html_drift_06.png) |
 
-Las nueve ejecuciones definitivas finalizaron en estado `Completed`. El umbral de Evidently se alineó con la configuración de 30 % y se regeneraron los reportes antes de su consolidación.
+Las nueve ejecuciones definitivas finalizaron en estado `Completed`. Las doce capturas documentan esas ejecuciones y los reportes HTML regenerados después de alinear el umbral de Evidently con el 30 % establecido en la configuración.
 
 ## 7. Pruebas, alcance y trazabilidad
 
