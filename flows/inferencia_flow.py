@@ -24,6 +24,7 @@ from mlflow.tracking import MlflowClient
 from prefect import flow, task
 
 from src.modelo import CATEGORICAS, NUMERICAS, OBJETIVO
+from src.monitoreo import aplicar_drift
 
 RAIZ = Path(__file__).resolve().parents[1]
 ZONA_HORARIA = ZoneInfo("America/Bogota")
@@ -50,7 +51,7 @@ def cargar_lote(config, fecha_ejecucion):
             "con los archivos del ANDA preparados por Lili."
         )
 
-    columnas_requeridas = ["periodo", *NUMERICAS, *CATEGORICAS]
+    columnas_requeridas = ["periodo", *NUMERICAS, *CATEGORICAS, OBJETIVO]
     datos = pd.read_csv(
         ruta, dtype={"periodo": str, **{c: str for c in CATEGORICAS}}
     )
@@ -86,6 +87,47 @@ def cargar_lote(config, fecha_ejecucion):
         f"periodos={', '.join(sorted(lote['periodo'].unique()))}"
     )
     return lote.reset_index(drop=True)
+
+
+@task(name="simular-y-guardar-lote-drift")
+def simular_y_guardar_lote(lote, config, fecha_ejecucion):
+    """Aplica drift y conserva el lote usado en inferencia."""
+    nivel = float(config["inferencia"]["nivel_drift"])
+    semilla = int(config["inferencia"]["semilla_drift"])
+
+    if not 0.0 <= nivel <= 1.0:
+        raise ValueError("nivel_drift debe estar entre 0 y 1")
+
+    lote_simulado = aplicar_drift(
+        lote, nivel=nivel, semilla=semilla
+    )
+
+    if "destino_usa_original" not in lote_simulado.columns:
+        raise ValueError(
+            "La simulacion debe conservar destino_usa_original"
+        )
+
+    carpeta = RAIZ / config["monitoreo"]["carpeta_lotes"]
+    carpeta.mkdir(parents=True, exist_ok=True)
+
+    marca = fecha_ejecucion.strftime("%Y%m%d_%H%M%S_%f")
+    ruta = carpeta / f"lote_drift_{nivel:.1f}_{marca}.csv"
+    lote_simulado.to_csv(
+        ruta, index=False, encoding="utf-8-sig"
+    )
+
+    ruta_actual = RAIZ / config["monitoreo"]["lote_actual"]
+    ruta_actual.parent.mkdir(parents=True, exist_ok=True)
+    lote_simulado.to_csv(
+        ruta_actual, index=False, encoding="utf-8-sig"
+    )
+
+    print(
+        f"Drift emulado: nivel={nivel:.1f}; "
+        f"registros={len(lote_simulado)}; archivo={ruta}"
+    )
+
+    return lote_simulado, str(ruta)
 
 
 @task(name="cargar-y-aplicar-champion")
@@ -133,7 +175,16 @@ def predecir_con_champion(lote, config, fecha_ejecucion):
     # Etiqueta de septiembre SOLO para comprobacion retrospectiva,
     # nunca incluida en las variables usadas para la prediccion.
     if OBJETIVO in lote.columns:
-        salida["destino_usa_observado"] = lote[OBJETIVO].to_numpy()
+        salida["destino_usa_simulado"] = lote[OBJETIVO].to_numpy()
+
+    if "destino_usa_original" in lote.columns:
+        salida["destino_usa_observado"] = (
+            lote["destino_usa_original"].to_numpy()
+        )
+
+    salida["nivel_drift"] = float(
+        config["inferencia"]["nivel_drift"]
+    )
 
     print(
         f"MLflow: {uri}, version {version_modelo.version}; "
@@ -143,7 +194,9 @@ def predecir_con_champion(lote, config, fecha_ejecucion):
 
 
 @task(name="guardar-y-registrar-inferencia")
-def guardar_y_registrar(salida, version, variables, config, fecha_ejecucion):
+def guardar_y_registrar(
+    salida, version, variables, config, fecha_ejecucion, ruta_lote
+):
     """Guarda CSV fechado y registra el lote como run en MLflow."""
     configurar_mlflow(config)
     carpeta = RAIZ / config["inferencia"]["carpeta_salida"]
@@ -163,6 +216,8 @@ def guardar_y_registrar(salida, version, variables, config, fecha_ejecucion):
             "features": ",".join(variables),
             "tamano_lote": len(salida),
             "umbral_clasificacion": config["inferencia"]["umbral_clasificacion"],
+            "nivel_drift": config["inferencia"]["nivel_drift"],
+            "semilla_drift": config["inferencia"]["semilla_drift"],
         })
         mlflow.log_metric("n_predicciones", len(salida))
         mlflow.log_metric(
@@ -183,6 +238,9 @@ def guardar_y_registrar(salida, version, variables, config, fecha_ejecucion):
                 print(f"AUC temporal (solo evaluacion): {auc_temporal:.4f}")
 
         mlflow.log_artifact(str(ruta), artifact_path="predicciones")
+        mlflow.log_artifact(
+            ruta_lote, artifact_path="lotes_monitoreo"
+        )
         run_id = run.info.run_id
 
     print(f"CSV: {ruta}")
@@ -190,14 +248,28 @@ def guardar_y_registrar(salida, version, variables, config, fecha_ejecucion):
     return {"archivo": str(ruta), "model_version": version, "run_id": run_id}
 
 
+
+
 @flow(name="inferencia-expo-destino-usa", log_prints=True)
 def inferencia_flow():
-    """Pipeline diario: ingesta -> champion -> prediccion -> registro."""
+    """Inferencia con drift emulado y trazabilidad en MLflow."""
     config = leer_configuracion()
     fecha = datetime.now(ZONA_HORARIA)
-    lote = cargar_lote(config, fecha)
-    salida, version, variables = predecir_con_champion(lote, config, fecha)
-    return guardar_y_registrar(salida, version, variables, config, fecha)
+
+    lote_original = cargar_lote(config, fecha)
+
+    lote_simulado, ruta_lote = simular_y_guardar_lote(
+        lote_original, config, fecha
+    )
+
+    salida, version, variables = predecir_con_champion(
+        lote_simulado, config, fecha
+    )
+
+    return guardar_y_registrar(
+        salida, version, variables,
+        config, fecha, ruta_lote
+    )
 
 
 if __name__ == "__main__":
