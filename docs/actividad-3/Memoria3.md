@@ -8,35 +8,35 @@
 
 ## 1. Objetivo
 
-Extender el clasificador binario de la Actividad 2 para monitorear cambios en las variables predictoras (*feature drift*) y en el objetivo (*target drift*) mediante perturbaciones reproducibles, flujos de Prefect, alertas configurables y pruebas automatizadas. Se conserva la variable `destino_usa` (1: Estados Unidos; 0: otros destinos válidos) y el modelo registrado con el alias `champion` en MLflow.
+Ampliar el sistema de clasificación de la Actividad 2 mediante simulación reproducible de cambios en los datos, monitoreo de características (*feature drift*) y de la variable objetivo (*target drift*), alertas configurables y pruebas automatizadas. Se conserva el objetivo binario `destino_usa` (1: Estados Unidos; 0: otros destinos válidos) y el modelo identificado con el alias `champion` en MLflow.
 
 ## 2. Descripción del trabajo
 
-Se desarrolló `src/monitoreo.py` con funciones de validación de lotes, simulación, contraste del objetivo mediante chi-cuadrado y extracción de métricas de Evidently, separadas de la orquestación. Se incorporaron `tests/test_monitoreo.py` y `tests/test_datos.py`, que emplean datos sintéticos. El flujo `flows/inferencia_flow.py` utiliza Random Forest `champion` v2, selecciona lotes de 500 registros de septiembre de 2026, aplica los niveles `0.0`, `0.3` y `0.6`, conserva `destino_usa_original` y registra predicciones y artefactos en MLflow.
+Se implementó `src/monitoreo.py` con validación de lotes, emulación de drift, prueba de chi-cuadrado para el objetivo y extracción de resultados de Evidently. La lógica se mantiene independiente de Prefect y MLflow para facilitar las pruebas. El flujo `flows/inferencia_flow.py` selecciona lotes de 500 registros de septiembre de 2026, aplica niveles configurables de perturbación (`0.0`, `0.3` y `0.6`), conserva `destino_usa_original` y registra predicciones y artefactos con el modelo Random Forest `champion` v2.
 
-Se implementaron dos flujos adicionales de Prefect: `flows/drift_features_flow.py`, que compara cinco características con una referencia reproducible de 10.000 registros de entrenamiento mediante Evidently, y `flows/drift_evento_flow.py`, que contrasta las proporciones binarias del objetivo con chi-cuadrado. Ambos guardan resúmenes y emiten mensajes de alerta según sus criterios configurados. Las nueve ejecuciones definitivas de inferencia y monitoreo finalizaron en estado `Completed`.
+Dos flujos de Prefect complementan la inferencia: `flows/drift_features_flow.py` compara las cinco variables predictoras con una muestra reproducible de 10.000 registros de entrenamiento mediante Evidently; `flows/drift_evento_flow.py` contrasta las proporciones de `destino_usa` mediante chi-cuadrado. Los flujos generan reportes y registros de alertas. Las nueve ejecuciones de inferencia y monitoreo de los tres escenarios terminaron en estado `Completed`.
 
 ## 3. Decisiones técnicas
 
-Se separó la lógica estadística de Prefect y MLflow para facilitar su prueba aislada. La simulación desplaza `pnk` y `fobdol`, modifica de manera controlada la proporción del objetivo y utiliza la semilla `42` para reproducibilidad. La etiqueta original se preserva para distinguir observaciones reales y valores artificiales. Las perturbaciones no describen cambios reales en las exportaciones.
+La emulación modifica las distribuciones de `pnk` y `fobdol` y, de forma controlada, la proporción del objetivo; utiliza semilla `42` para reproducibilidad y preserva las etiquetas originales. Los cambios son **artificiales** y no representan una variación observada de las exportaciones.
 
-Evidently se adoptó de acuerdo con la guía de la actividad, sin evaluación comparativa de herramientas. Para `destino_usa`, por su naturaleza binaria, se eligió chi-cuadrado para contrastar proporciones entre referencia y lote, con significación `α = 0,05`; no se realizó comparación formal con otros contrastes.
+Se utilizó Evidently por ser la herramienta indicada en la guía, sin comparación experimental con alternativas. El contraste chi-cuadrado se seleccionó por la naturaleza binaria del objetivo y los tamaños de las muestras; se aplicó una significancia de `α = 0,05`, sin evaluación formal de otras pruebas estadísticas.
 
-El umbral de características se fijó en **30 %** como regla operativa configurable, no como límite estadístico universal: entre cinco variables, una con drift equivale al 20 % y dos al 40 %, de modo que la alerta se activa al detectarse al menos dos. El valor configurado se aplica también al reporte con `DataDriftPreset(drift_share=umbral)`; previamente se identificó una discrepancia con el valor predeterminado de Evidently. No se optimizó estadísticamente este umbral.
+El umbral global de características se fijó en **30 %** como criterio operativo configurable: con cinco variables, una con drift equivale al 20 % y dos al 40 %, por lo que se alerta a partir de dos variables afectadas. No se realizó optimización estadística de este valor. La configuración se aplica tanto a la alerta como al reporte con `DataDriftPreset(drift_share=umbral)`.
 
 ## 4. Evidencias
 
-El módulo de monitoreo y sus pruebas se integraron en el [PR #16](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/16); los flujos y nueve capturas iniciales, en el [PR #17](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/17); y la corrección del umbral junto con tres capturas adicionales de los reportes HTML de Evidently, en el [PR #18](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/18). La suite registró **44 pruebas automatizadas satisfactorias**.
+El código de monitoreo y las pruebas iniciales se integraron mediante el [PR #16](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/16); los flujos y nueve capturas, mediante el [PR #17](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/17); y el ajuste del umbral con tres reportes HTML adicionales, mediante el [PR #18](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/18).
 
-| Nivel | Inferencia (Prefect) | Características (Evidently) | Objetivo (Prefect) | Reporte HTML (Evidently) |
+| Nivel | Inferencia (Prefect) | Características (Evidently) | Objetivo (Prefect) | Reporte HTML |
 |---|---|---|---|---|
-| `0.0` | [Evidencia 01](evidencias/01_prefect_inferencia_drift_0.png) | [Evidencia 02](evidencias/02_evidently_features_drift_0.png) | [Evidencia 03](evidencias/03_prefect_target_drift_0.png) | [Evidencia 10](evidencias/10_evidently_reporte_html_drift_0.png) |
-| `0.3` | [Evidencia 04](evidencias/04_prefect_inferencia_drift_03.png) | [Evidencia 05](evidencias/05_evidently_features_drift_03.png) | [Evidencia 06](evidencias/06_prefect_target_drift_03.png) | [Evidencia 11](evidencias/11_evidently_reporte_html_drift_03.png) |
-| `0.6` | [Evidencia 07](evidencias/07_prefect_inferencia_drift_06.png) | [Evidencia 08](evidencias/08_evidently_features_drift_06.png) | [Evidencia 09](evidencias/09_prefect_target_drift_06.png) | [Evidencia 12](evidencias/12_evidently_reporte_html_drift_06.png) |
+| `0.0` | [01](evidencias/01_prefect_inferencia_drift_0.png) | [02](evidencias/02_evidently_features_drift_0.png) | [03](evidencias/03_prefect_target_drift_0.png) | [10](evidencias/10_evidently_reporte_html_drift_0.png) |
+| `0.3` | [04](evidencias/04_prefect_inferencia_drift_03.png) | [05](evidencias/05_evidently_features_drift_03.png) | [06](evidencias/06_prefect_target_drift_03.png) | [11](evidencias/11_evidently_reporte_html_drift_03.png) |
+| `0.6` | [07](evidencias/07_prefect_inferencia_drift_06.png) | [08](evidencias/08_evidently_features_drift_06.png) | [09](evidencias/09_prefect_target_drift_06.png) | [12](evidencias/12_evidently_reporte_html_drift_06.png) |
 
 ## 5. Resultados
 
-Se evaluaron tres niveles de perturbación sobre lotes de **500 registros**, utilizando **10.000 registros de entrenamiento** como referencia. La tasa de destino USA en la referencia fue **12,90 %**.
+Se evaluaron lotes de **500 registros** contra **10.000 registros de referencia**. La tasa de `destino_usa = 1` en la referencia fue **12,90 %**.
 
 | Nivel | AUC temporal | Características con drift | Tasa USA del lote | Valor p del objetivo | Alerta características | Alerta objetivo |
 |---|---:|---:|---:|---:|---|---|
@@ -44,24 +44,31 @@ Se evaluaron tres niveles de perturbación sobre lotes de **500 registros**, uti
 | `0.3` | 0,7029 | 40 % (2/5) | 22,40 % | < 0,000001 | Sí | Sí |
 | `0.6` | 0,6752 | 60 % (3/5) | 31,40 % | < 0,000001 | Sí | Sí |
 
-En `0.0` se conservaron las **67 etiquetas positivas originales**, sin modificaciones; aun así, Evidently identificó drift en una variable. La fracción del 20 % no superó el umbral global del 30 % y el contraste del objetivo tampoco resultó significativo (`p = 0,797220`). En `0.3` y `0.6` aumentaron las características con drift y la tasa simulada de destino USA; ambos sistemas generaron alertas. Los valores p de estos dos escenarios fueron inferiores a `0,000001`; el valor mostrado por Prefect como `0.000000` corresponde a redondeo, no a un valor p exactamente nulo.
+Con nivel `0.0` no se modificaron las 67 etiquetas positivas del lote. Aun sin perturbación artificial, Evidently detectó drift en una característica, insuficiente para activar la alerta del 30 %. En `0.3` y `0.6` se activaron las dos alertas y aumentó la proporción simulada de destino USA. Los valores p inferiores a `0,000001` no deben confundirse con un valor exactamente nulo cuando Prefect los presenta redondeados como `0.000000`.
 
-El AUC temporal descendió de **0,7464** a **0,6752** entre los escenarios extremos. Estos resultados corresponden a drift **emulado** y no son mediciones de desempeño en producción ni permiten inferir, por sí solos, una relación causal generalizable.
+El AUC, calculado con respecto a las **etiquetas originales**, disminuyó de **0,7464** a **0,6752** entre los escenarios extremos. Esta asociación corresponde a un experimento de perturbación controlada, no a desempeño en producción ni a una relación causal generalizable.
+
+En `main` se verificaron **44 pruebas automatizadas**. La ampliación de cobertura en una rama de desarrollo alcanzó **83 pruebas satisfactorias**, distribuidas en las 44 iniciales, 15 del modelo, 9 de inferencia y 15 de FastAPI con `TestClient` y mocks. El total definitivo se consolidará tras integrar y comprobar la batería completa, incluidos los flujos de drift.
 
 ## 6. Problemas encontrados
 
-Durante la integración de la inferencia se corrigió un error de indentación y se validó la sintaxis de Python. La integración mediante ramas y solicitudes de incorporación se comprobó con las 44 pruebas automatizadas. Adicionalmente, se detectó que el reporte de Evidently utilizaba un umbral predeterminado de **50 %**, diferente del **30 %** establecido en YAML. Se corrigió mediante `DataDriftPreset(drift_share=umbral)`, se regeneraron los tres reportes y se verificó visualmente la aplicación del umbral; el ajuste quedó integrado mediante el PR #18. Las nueve ejecuciones definitivas terminaron sin fallos.
+Se corrigió un error de indentación en la inferencia y se comprobó la sintaxis de Python. Asimismo, se identificó que Evidently generaba inicialmente reportes con un umbral predeterminado del **50 %**, distinto del **30 %** definido en YAML. Se ajustó `DataDriftPreset(drift_share=umbral)`, se regeneraron los tres reportes y se verificó el criterio aplicado; el cambio se integró en el PR #18. Las nueve ejecuciones definitivas terminaron sin fallos.
 
 ## 7. Conclusiones
 
-La integración de inferencia, monitoreo y alertas permitió verificar el comportamiento del sistema bajo tres niveles de drift artificial. El escenario `0.0` evidenció que la ausencia de perturbación inducida no implica distribuciones idénticas a las de entrenamiento, ni exige una alerta cuando el cambio detectado queda por debajo del umbral operativo. Los escenarios `0.3` y `0.6` activaron las alertas de características y objetivo, acompañados de una reducción observada del AUC.
+La separación de la lógica estadística y la orquestación permitió verificar la simulación y el monitoreo de manera reproducible. El nivel `0.0` mostró que la ausencia de perturbación no implica igualdad estadística entre las distribuciones, y que una característica con drift no necesariamente desencadena una alerta global. Los niveles `0.3` y `0.6` activaron ambas alertas y registraron una reducción progresiva del AUC en el experimento emulado.
 
-Las 44 pruebas respaldan las funciones automatizadas de ingesta, validación y monitoreo, pero no establecen cobertura unitaria específica del modelo, la inferencia o FastAPI. Se recomienda ampliar esa cobertura y contrastar los umbrales y el desempeño en otros períodos y lotes antes de considerar un monitoreo operativo. No se implementó CI con GitHub Actions, opción no obligatoria de la guía.
+La ampliación de pruebas fortalece la confiabilidad del sistema; antes de una aplicación operativa sería necesario contrastar su comportamiento en otros períodos, evaluar la sensibilidad de los umbrales y consolidar la ejecución automatizada de la batería de pruebas. La integración continua con GitHub Actions se considera una extensión del proceso de validación, no un resultado ya acreditado.
 
 ## 8. Uso de herramientas de IA
 
-Se utilizó **ChatGPT** como apoyo para la elaboración y revisión del módulo de monitoreo y sus pruebas, la implementación y depuración de flujos de Prefect y Evidently, la preparación de comandos de PowerShell, la gestión de Git y la redacción documental. Sus propuestas se sometieron a comprobación mediante ejecución de pruebas, validación de sintaxis, revisión de reportes y contrastación con los resultados obtenidos; se corrigieron las soluciones que lo requirieron, incluida la discrepancia del umbral de Evidently.
+Se utilizó **ChatGPT** como apoyo en la elaboración y revisión del módulo de monitoreo y sus pruebas, los flujos de Prefect y Evidently, el diagnóstico de errores, los comandos de PowerShell, el versionamiento y la documentación. Las propuestas se sometieron a validación mediante ejecución de pruebas, comprobación de sintaxis y revisión de reportes; se corrigieron los resultados que lo requirieron, incluido el ajuste del umbral de Evidently.
 
-**Liliana Carolina Herrera Prieto** desarrolló y probó, con asistencia de IA, `src/monitoreo.py`, `tests/test_monitoreo.py` y `tests/test_datos.py`, integrados mediante el PR #16; ejecutó las pruebas, gestionó su rama y preparó la documentación académica. **Fredy Ernesto Sandoval Méndez** desarrolló y verificó, también con asistencia de IA, la integración de inferencia y los dos flujos de drift; ejecutó los escenarios, revisó Prefect, MLflow y Evidently, recopiló las evidencias y gestionó los PR #17 y #18. La definición del caso, la aceptación de cambios, la interpretación de los resultados y la validación de las ejecuciones fueron responsabilidad del equipo, no decisiones delegadas a la IA.
+**Liliana Carolina Herrera Prieto** desarrolló y probó, con asistencia de IA, `src/monitoreo.py`, `tests/test_monitoreo.py` y `tests/test_datos.py`, integrados mediante el PR #16; verificó las pruebas, gestionó su rama y elaboró la documentación académica. **Fredy Ernesto Sandoval Méndez** desarrolló y verificó, también con asistencia de IA, la inferencia y los flujos de drift; ejecutó los escenarios, revisó los resultados en Prefect, MLflow y Evidently, recopiló las evidencias, gestionó los PR #17 y #18 y amplió las pruebas de modelo, inferencia y API. La elección del caso, la aceptación de cambios, la interpretación de los resultados y la comprobación de las ejecuciones correspondieron a los integrantes, no a decisiones delegadas a la IA.
 
-**Referencias:** [Guía oficial de la Actividad 3](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/actividad-3.md) · [Plantilla de memoria](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/plantilla-memoria.md) · [Repositorio del proyecto](https://github.com/fesandovalm-sys/usta-mlops-exportaciones).
+**Referencias:** [Guía oficial](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/actividad-3.md) · [Plantilla de memoria](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/plantilla-memoria.md) · [Repositorio del equipo](https://github.com/fesandovalm-sys/usta-mlops-exportaciones).
+
+<!-- Referencias reservadas para incorporación tras validación y publicación de las capturas de MLflow:
+[Parámetros y métricas de inferencia](evidencias/13_mlflow_inferencia_parametros_metricas.png)
+[Artefactos del experimento](evidencias/14_mlflow_inferencia_artefactos.png)
+-->
