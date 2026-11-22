@@ -83,6 +83,11 @@ def analizar_drift(referencia, lote, config):
     umbral = float(config["monitoreo"]["umbral_drift"])
     if not 0 <= umbral <= 1:
         raise ValueError("umbral_drift debe estar entre 0 y 1")
+    resultado = Report([DataDriftPreset(drift_share=umbral)]).run(
+        reference_data=referencia,
+        current_data=lote,
+    )
+    fraccion = fraccion_desde_evidently(resultado.dict())
 
     alerta = fraccion > umbral
 
