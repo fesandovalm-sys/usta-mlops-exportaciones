@@ -24,8 +24,12 @@ Las cinco variables predictoras son `pnk`, `fobdol`, `capitulo`, `modad` y `dpto
 | Monitoreo del objetivo | [`flows/drift_evento_flow.py`](../../flows/drift_evento_flow.py) | Comparación de proporciones con chi-cuadrado y resumen JSON |
 | Parámetros | [`configs/config.yaml`](../../configs/config.yaml) | Niveles de simulación, tamaños de lote y referencia, umbrales y rutas |
 | Pruebas de monitoreo | [`tests/test_monitoreo.py`](../../tests/test_monitoreo.py) | Pruebas de funciones de drift con datos sintéticos |
-| Pruebas de datos | [`tests/test_datos.py`](../../tests/test_datos.py) | Esquema, tipos, rangos, nulos y etiquetas |
-| Evidencias | [`evidencias/`](evidencias/) | Doce capturas de inferencia, monitoreo y reportes HTML de Evidently |
+| Pruebas de datos | [`tests/test_datos.py`](../../tests/test_datos.py) y [`tests/test_ingesta_anda.py`](../../tests/test_ingesta_anda.py) | Esquema, tipos, rangos, nulos, etiquetas e ingesta |
+| Pruebas del modelo | [`tests/test_modelo.py`](../../tests/test_modelo.py) | Selección de variables, entrenamiento y métricas |
+| Pruebas de inferencia | [`tests/test_inferencia.py`](../../tests/test_inferencia.py) | Lotes, drift simulado y predicción con modelo sustituido |
+| Pruebas de API | [`tests/test_api.py`](../../tests/test_api.py) | Validación de `/health` y `/predict` mediante `TestClient` y *mocks* |
+| Pruebas de flujos de drift | [`tests/test_drift_flows.py`](../../tests/test_drift_flows.py) | Alertas, umbrales, manejo de etiquetas y archivos de salida |
+| Evidencias | [`evidencias/`](evidencias/) | Catorce capturas de Prefect, Evidently y MLflow |
 
 Se conservan el entrenamiento, la API FastAPI y los servicios de Prefect y MLflow de la Actividad 2.
 
@@ -62,6 +66,15 @@ poetry run python -m flows.drift_evento_flow
 
 Repetir la secuencia para cada escenario. Es necesario ejecutar los flujos de monitoreo antes de iniciar la siguiente inferencia, ya que esta reemplaza `data/outputs/lotes/lote_actual.csv`. Los archivos de datos, modelos y resultados locales no se versionan; las capturas de las ejecuciones sí se incluyen en el repositorio.
 
+Si se desea ejecutar adicionalmente la API de inferencia de la Actividad 2, con el modelo `champion` registrado en MLflow, utilizar otra terminal:
+
+```powershell
+$env:MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
+poetry run uvicorn api.main:app --host 127.0.0.1 --port 8000
+```
+
+La documentación interactiva de la API se encuentra en `http://127.0.0.1:8000/docs`. Esta ejecución no es necesaria para correr la batería de pruebas automatizadas, que sustituye las dependencias externas cuando corresponde.
+
 ## 5. Resultados experimentales
 
 La tasa `destino_usa = 1` de referencia fue **12,90 %** en los tres escenarios. Se obtuvieron los siguientes resultados:
@@ -82,7 +95,7 @@ En `0.0` no hubo perturbación artificial: se conservaron las 67 etiquetas posit
 | `0.3` | [04 — Inferencia](evidencias/04_prefect_inferencia_drift_03.png) | [05 — Evidently](evidencias/05_evidently_features_drift_03.png) | [06 — Chi-cuadrado](evidencias/06_prefect_target_drift_03.png) | [11 — Reporte HTML](evidencias/11_evidently_reporte_html_drift_03.png) |
 | `0.6` | [07 — Inferencia](evidencias/07_prefect_inferencia_drift_06.png) | [08 — Evidently](evidencias/08_evidently_features_drift_06.png) | [09 — Chi-cuadrado](evidencias/09_prefect_target_drift_06.png) | [12 — Reporte HTML](evidencias/12_evidently_reporte_html_drift_06.png) |
 
-Las nueve ejecuciones definitivas finalizaron en estado `Completed`. Las doce capturas documentan esas ejecuciones y los reportes HTML regenerados después de alinear el umbral de Evidently con el 30 % establecido en la configuración.
+Las nueve ejecuciones definitivas finalizaron en estado `Completed`. Las doce primeras capturas documentan esas ejecuciones y los reportes HTML regenerados después de alinear el umbral de Evidently con el 30 % establecido en la configuración. El [PR #19](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/19) añadió las evidencias de MLflow: [13 — Parámetros y métricas de inferencia](evidencias/13_mlflow_inferencia_parametros_metricas.png) y [14 — Artefactos registrados](evidencias/14_mlflow_inferencia_artefactos.png). **Se encuentran publicadas 14 evidencias en total.**
 
 ## 7. Pruebas, alcance y trazabilidad
 
@@ -90,11 +103,23 @@ Las nueve ejecuciones definitivas finalizaron en estado `Completed`. Las doce ca
 poetry run python -m pytest -q
 ```
 
-La suite automatizada existente registró **44 pruebas satisfactorias**. Comprende pruebas de ingesta y validación de datos, así como lógica de simulación y detección de drift; sus pruebas sintéticas permiten verificar funciones sin levantar Prefect ni MLflow. La ejecución funcional del entrenamiento, la inferencia y FastAPI no equivale a cobertura automatizada específica de esos componentes. No se implementó un workflow de GitHub Actions; la CI es opcional en la guía.
+La batería ampliada mediante el PR #19 registró **95 pruebas automatizadas aprobadas**, sin requerir servidores MLflow o Prefect durante su ejecución. Las pruebas de API utilizan `TestClient` y *mocks*; las de inferencia y monitoreo aíslan funciones y simulan servicios cuando corresponde.
 
-- [PR #16](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/16): simulación, validaciones y pruebas.
+| Grupo de pruebas | Cantidad | Archivos |
+|---|---:|---|
+| Ingesta, datos y monitoreo inicial | 44 | `test_ingesta_anda.py`, `test_datos.py`, `test_monitoreo.py` |
+| Modelo | 15 | `test_modelo.py` |
+| Inferencia | 9 | `test_inferencia.py` |
+| API FastAPI | 15 | `test_api.py` |
+| Flujos de drift | 12 | `test_drift_flows.py` |
+| **Total** | **95** | |
+
+Se incluyen pruebas de validación, reproducción de lotes, detección de errores, alertas, generación de reportes y respuestas de API. **No se implementó GitHub Actions**, dado que la guía considera opcional la CI.
+
+- [PR #16](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/16): simulación, validaciones y pruebas iniciales.
 - [PR #17](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/17): flujos de inferencia y monitoreo, configuración y evidencias.
 - [PR #18](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/18): aplicación del umbral configurado al reporte de Evidently.
+- [PR #19](https://github.com/fesandovalm-sys/usta-mlops-exportaciones/pull/19): ampliación de 95 pruebas, corrección de ejecución redundante de Evidently y evidencias de MLflow.
 
 ## Referencias
 
