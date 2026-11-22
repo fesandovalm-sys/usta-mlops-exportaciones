@@ -43,9 +43,18 @@ registro:
   alias: champion
 
 inferencia:
-  tamano_lote: 100
+  tamano_lote: 500
   carpeta_salida: data/outputs
   umbral_clasificacion: 0.50
+  nivel_drift: 0.0
+  semilla_drift: 42
+
+monitoreo:
+  lote_actual: data/outputs/lotes/lote_actual.csv
+  carpeta_lotes: data/outputs/lotes
+  carpeta_reportes: data/outputs/reportes_drift
+  umbral_drift: 0.30
+  alfa_evento: 0.05
 despliegues:
   inferencia_cron: "0 21 * * *"
   zona_horaria: "America/Bogota"
