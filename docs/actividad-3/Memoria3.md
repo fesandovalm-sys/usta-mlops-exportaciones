@@ -2,7 +2,11 @@
 
 **Asignatura:** MLOps · Maestría en Ciencia de Datos, Universidad Santo Tomás
 
+**Docente:** Henry Cala
+
 **Integrantes:** Liliana Carolina Herrera Prieto y Fredy Ernesto Sandoval Méndez
+
+**Repositorio:** https://github.com/fesandovalm-sys/usta-mlops-exportaciones
 
 **Caso de estudio:** clasificación del destino de exportaciones colombianas (EXPO, DANE/ANDA)
 

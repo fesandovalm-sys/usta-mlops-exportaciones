@@ -10,6 +10,7 @@ Este repositorio reúne las actividades del curso y sus implementaciones progres
 |---|---|---|---|
 | **1. Fundamentos, versionamiento y tracking** | Configuración de Poetry, Git/GitHub, Prefect, MLflow y Docker Compose; validación de la integración de herramientas. | [README de la Actividad 1](docs/actividad-1/README.md) | [Memoria 1](docs/actividad-1/Memoria1.md) · [PDF](docs/actividad-1/Memoria1.pdf) |
 | **2. Pipeline y empaquetado** | Clasificación del destino de exportaciones colombianas (Estados Unidos frente a otros países), entrenamiento y evaluación, registro y promoción del modelo `champion`, inferencia diaria y API FastAPI. | [README de la Actividad 2](docs/actividad-2/README.md) | [Memoria 2](docs/actividad-2/Memoria2.md) · [PDF](docs/actividad-2/Memoria2.pdf) |
+| **3. Monitoreo, drift y pruebas automatizadas** | Simulación de drift, monitoreo con Evidently y Prefect, alertas configurables y 95 pruebas automatizadas. | [README de la Actividad 3](docs/actividad-3/README.md) | [Memoria 3](docs/actividad-3/Memoria3.md) |
 
 ## Organización del repositorio
 
@@ -32,3 +33,4 @@ Los microdatos originales y procesados, los archivos de predicciones y los regis
 - [Repositorio de materiales del profesor](https://github.com/henrycala/santoto-mlops-content).
 - [Guía oficial de la Actividad 1](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/actividad-1.md).
 - [Guía oficial de la Actividad 2](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/actividad-2.md).
+- [Guía oficial de la Actividad 3](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/actividad-3.md).
