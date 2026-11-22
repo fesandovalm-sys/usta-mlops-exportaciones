@@ -72,23 +72,16 @@ def cargar_lote(config):
 @task(name="reporte-evidently-features")
 def analizar_drift(referencia, lote, config):
     """Genera el reporte y determina si corresponde una alerta."""
-
-    resultado = Report([DataDriftPreset()]).run(
-        reference_data=referencia,
-        current_data=lote,
-    )
-
-    fraccion = fraccion_desde_evidently(resultado.dict())
-
     umbral = float(config["monitoreo"]["umbral_drift"])
     if not 0 <= umbral <= 1:
         raise ValueError("umbral_drift debe estar entre 0 y 1")
+
     resultado = Report([DataDriftPreset(drift_share=umbral)]).run(
         reference_data=referencia,
         current_data=lote,
     )
-    fraccion = fraccion_desde_evidently(resultado.dict())
 
+    fraccion = fraccion_desde_evidently(resultado.dict())
     alerta = fraccion > umbral
 
     carpeta = RAIZ / config["monitoreo"]["carpeta_reportes"]
