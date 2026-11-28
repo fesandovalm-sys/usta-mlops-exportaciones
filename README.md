@@ -2,25 +2,29 @@
 
 Proyecto académico de la **Maestría en Ciencia de Datos de la Universidad Santo Tomás**, desarrollado por **Liliana Carolina Herrera Prieto y Fredy Ernesto Sandoval Méndez** para la asignatura **MLOps**.
 
-Este repositorio reúne las actividades del curso y sus implementaciones progresivas. Cada actividad conserva su propia documentación; este archivo es el punto de entrada general.
+Este repositorio reúne las cuatro actividades del curso y sus implementaciones progresivas. Cada actividad conserva su propia documentación; este archivo es el punto de entrada general.
 
 ## Actividades
 
-| Actividad | Alcance | Documentación | Memoria |
+| Actividad | Alcance | Documentación | Entregable |
 |---|---|---|---|
 | **1. Fundamentos, versionamiento y tracking** | Configuración de Poetry, Git/GitHub, Prefect, MLflow y Docker Compose; validación de la integración de herramientas. | [README de la Actividad 1](docs/actividad-1/README.md) | [Memoria 1](docs/actividad-1/Memoria1.md) · [PDF](docs/actividad-1/Memoria1.pdf) |
-| **2. Pipeline y empaquetado** | Clasificación del destino de exportaciones colombianas (Estados Unidos frente a otros países), entrenamiento y evaluación, registro y promoción del modelo `champion`, inferencia diaria y API FastAPI. | [README de la Actividad 2](docs/actividad-2/README.md) | [Memoria 2](docs/actividad-2/Memoria2.md) · [PDF](docs/actividad-2/Memoria2.pdf) |
-| **3. Monitoreo, drift y pruebas automatizadas** | Simulación de drift, monitoreo con Evidently y Prefect, alertas configurables y 95 pruebas automatizadas. | [README de la Actividad 3](docs/actividad-3/README.md) | [Memoria 3](docs/actividad-3/Memoria3.md) |
+| **2. Pipeline y empaquetado** | Clasificación del destino de exportaciones colombianas (Estados Unidos frente a otros países), entrenamiento y evaluación, registro y promoción del modelo `champion`, inferencia y API FastAPI. | [README de la Actividad 2](docs/actividad-2/README.md) | [Memoria 2](docs/actividad-2/Memoria2.md) · [PDF](docs/actividad-2/Memoria2.pdf) |
+| **3. Monitoreo, drift y pruebas automatizadas** | Simulación de drift, monitoreo con Evidently y Prefect, alertas configurables y 95 pruebas automatizadas. | [README de la Actividad 3](docs/actividad-3/README.md) | [Memoria 3](docs/actividad-3/Memoria3.md) · [PDF](docs/actividad-3/Memoria3.pdf) |
+| **4. Sistema end-to-end y reflexión** | Reflexión integradora sobre el recorrido del dato, decisiones técnicas, dificultades, aprendizajes y oportunidades de mejora. | [README de la Actividad 4](docs/actividad-4/README.md) | [Reflexión final (PDF)](docs/actividad-4/Actividad4_Endtoend_Reflexion.pdf) |
 
 ## Organización del repositorio
 
 - `src/`: preparación de microdatos y construcción de modelos.
-- `flows/`: entrenamiento, inferencia y despliegues de Prefect.
+- `flows/`: entrenamiento, inferencia y monitoreo con Prefect.
 - `api/`: servicio de predicción con FastAPI.
 - `configs/`: parámetros y selección de variables en YAML.
 - `tests/`: pruebas automatizadas.
 - `services/`: configuración de Prefect y MLflow con Docker Compose.
-- `docs/actividad-1/` y `docs/actividad-2/`: instrucciones, documentación y evidencias de cada actividad.
+- `docs/actividad-1/`: fundamentos y configuración inicial.
+- `docs/actividad-2/`: pipeline, evaluación, modelo `champion` y API.
+- `docs/actividad-3/`: monitoreo de drift, pruebas y evidencias.
+- `docs/actividad-4/`: reflexión integradora final y enlaces a evidencias del sistema.
 
 ## Entorno y reproducibilidad
 
@@ -28,9 +32,12 @@ El proyecto utiliza **Python, Poetry, Prefect, MLflow y Scikit-learn**. Las depe
 
 Los microdatos originales y procesados, los archivos de predicciones y los registros locales de MLflow y Prefect **no forman parte del repositorio**. La Actividad 2 documenta cómo preparar los datos y reproducir los flujos; las [evidencias de sus ejecuciones](docs/actividad-2/evidencias/) sí están versionadas.
 
+**Nota:** Se ejecutaron 95 pruebas automatizadas localmente en la Actividad 3. No se implementó GitHub Actions; su posible configuración se contempla como trabajo futuro en la Actividad 4.
+
 ## Referencias del curso
 
 - [Repositorio de materiales del profesor](https://github.com/henrycala/santoto-mlops-content).
 - [Guía oficial de la Actividad 1](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/actividad-1.md).
 - [Guía oficial de la Actividad 2](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/actividad-2.md).
 - [Guía oficial de la Actividad 3](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/actividad-3.md).
+- [Guía oficial de la Actividad 4](https://github.com/henrycala/santoto-mlops-content/blob/main/docs/actividad-4.md).
